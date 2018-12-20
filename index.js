@@ -1,3 +1,7 @@
+function isFunction(functionToCheck) {
+  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+
 var STATES = {
   PENDING: 'pending',
   FULFILLED: 'fulfilled',
@@ -9,7 +13,19 @@ module.exports = {
     var promise = {
       state: STATES.PENDING,
       value: null,
-      reason: null
+      reason: null,
+      then: function (onFulfilled, onRejected) {
+        if (isFunction(onFulfilled)) {
+          if (this.state === STATES.FULFILLED) {
+            onFulfilled(this.value);
+          }
+        }
+        if (isFunction(onRejected)) {
+          if (this.state === STATES.REJECTED) {
+            onRejected(this.reason);
+          }
+        }
+      }
     };
     var resolve = function (value) {
       if (promise.state === STATES.PENDING) {
