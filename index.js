@@ -22,8 +22,9 @@ module.exports = {
             this.onFulfilledHandlers.push(onFulfilled);
           }
           if (this.state === STATES.FULFILLED) {
+            var value = this.value;
             setTimeout(function () {
-              onFulfilled(this.value);
+              onFulfilled(value);
             }, 0);
           }
         }
@@ -32,8 +33,9 @@ module.exports = {
             this.onRejectedHandlers.push(onRejected);
           }
           if (this.state === STATES.REJECTED) {
+            var reason = this.reason;
             setTimeout(function () {
-              onRejected(this.reason);
+              onRejected(reason);
             }, 0);
           }
         }
