@@ -17,29 +17,28 @@ module.exports = {
       onFulfilledHandlers: [],
       onRejectedHandlers: [],
       then: function (onFulfilled, onRejected) {
+        var self = this;
         if (isFunction(onFulfilled)) {
-          if (this.state === STATES.PENDING) {
-            this.onFulfilledHandlers.push(onFulfilled);
+          if (self.state === STATES.PENDING) {
+            self.onFulfilledHandlers.push(onFulfilled);
           }
-          if (this.state === STATES.FULFILLED) {
-            var value = this.value;
+          if (self.state === STATES.FULFILLED) {
             setTimeout(function () {
-              onFulfilled(value);
+              onFulfilled(self.value);
             }, 0);
           }
         }
         if (isFunction(onRejected)) {
-          if (this.state === STATES.PENDING) {
-            this.onRejectedHandlers.push(onRejected);
+          if (self.state === STATES.PENDING) {
+            self.onRejectedHandlers.push(onRejected);
           }
-          if (this.state === STATES.REJECTED) {
-            var reason = this.reason;
+          if (self.state === STATES.REJECTED) {
             setTimeout(function () {
-              onRejected(reason);
+              onRejected(self.reason);
             }, 0);
           }
         }
-        return this;
+        return self;
       }
     };
     var resolve = function (value) {
