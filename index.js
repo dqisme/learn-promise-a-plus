@@ -17,12 +17,12 @@ module.exports = {
       then: function (onFulfilled, onRejected) {
         if (isFunction(onFulfilled)) {
           if (this.state === STATES.FULFILLED) {
-            onFulfilled(this.value);
+            setTimeout(function () { onFulfilled(this.value); }, 0);
           }
         }
         if (isFunction(onRejected)) {
           if (this.state === STATES.REJECTED) {
-            onRejected(this.reason);
+            setTimeout(function () { onRejected(this.reason); }, 0);
           }
         }
       }
