@@ -14,10 +14,12 @@ module.exports = {
       state: STATES.PENDING,
       value: null,
       reason: null,
+      onFulfilledHandlers: [],
+      onRejectedHandlers: [],
       then: function (onFulfilled, onRejected) {
         if (isFunction(onFulfilled)) {
           if (this.state === STATES.PENDING) {
-            this.onFulfilled = onFulfilled;
+            this.onFulfilledHandlers.push(onFulfilled);
           }
           if (this.state === STATES.FULFILLED) {
             setTimeout(function () {
@@ -27,7 +29,7 @@ module.exports = {
         }
         if (isFunction(onRejected)) {
           if (this.state === STATES.PENDING) {
-            this.onRejected = onRejected;
+            this.onRejectedHandlers.push(onRejected);
           }
           if (this.state === STATES.REJECTED) {
             setTimeout(function () {
@@ -35,28 +37,29 @@ module.exports = {
             }, 0);
           }
         }
+        return this;
       }
     };
     var resolve = function (value) {
       if (promise.state === STATES.PENDING) {
         promise.state = STATES.FULFILLED;
         promise.value = value;
-        if (promise.onFulfilled) {
+        promise.onFulfilledHandlers.forEach(function (onFulfilled) {
           setTimeout(function () {
-            promise.onFulfilled(promise.value);
+            onFulfilled(promise.value);
           }, 0);
-        }
+        });
       }
     };
     var reject = function (reason) {
       if (promise.state === STATES.PENDING) {
         promise.state = STATES.REJECTED;
         promise.reason = reason;
-        if (promise.onRejected) {
+        promise.onRejectedHandlers.forEach(function (onRejected) {
           setTimeout(function () {
-            promise.onRejected(promise.reason);
+            onRejected(promise.reason);
           })
-        }
+        });
       }
     };
     return { promise: promise, reject: reject, resolve: resolve };
