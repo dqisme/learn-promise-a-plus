@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "promises-aplus-tests ."
+    "test": "promises-aplus-tests . --bail --fullStackTrace"
   },
   "repository": {
     "type": "git",
