@@ -23,7 +23,7 @@ module.exports = {
           }
           if (_state === STATES.FULFILLED) {
             setTimeout(function () {
-              onFulfilled(_value);
+              try { onFulfilled(_value); } catch (e) {  }
             }, 0);
           }
         }
@@ -46,7 +46,7 @@ module.exports = {
         _value = value;
         _onFulfilledHandlers.forEach(function (onFulfilled) {
           setTimeout(function () {
-            onFulfilled(_value);
+            try { onFulfilled(_value); } catch (e) { }
           }, 0);
         });
       }
