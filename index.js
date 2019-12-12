@@ -10,42 +10,40 @@ var STATES = {
 
 module.exports = {
   deferred: function () {
+    var onFulfilledHandlers = [];
+    var onRejectedHandlers = [];
     var promise = {
       state: STATES.PENDING,
-      value: null,
-      reason: null,
-      onFulfilledHandlers: [],
-      onRejectedHandlers: [],
+      value: undefined,
       then: function (onFulfilled, onRejected) {
-        var self = this;
         if (isFunction(onFulfilled)) {
-          if (self.state === STATES.PENDING) {
-            self.onFulfilledHandlers.push(onFulfilled);
+          if (promise.state === STATES.PENDING) {
+            onFulfilledHandlers.push(onFulfilled);
           }
-          if (self.state === STATES.FULFILLED) {
+          if (promise.state === STATES.FULFILLED) {
             setTimeout(function () {
-              onFulfilled(self.value);
+              promise.value = onFulfilled(promise.value);
             }, 0);
           }
         }
         if (isFunction(onRejected)) {
-          if (self.state === STATES.PENDING) {
-            self.onRejectedHandlers.push(onRejected);
+          if (promise.state === STATES.PENDING) {
+            onRejectedHandlers.push(onRejected);
           }
-          if (self.state === STATES.REJECTED) {
+          if (promise.state === STATES.REJECTED) {
             setTimeout(function () {
-              onRejected(self.reason);
+              promise.value = onRejected(promise.value);
             }, 0);
           }
         }
-        return self;
+        return promise;
       }
     };
     var resolve = function (value) {
       if (promise.state === STATES.PENDING) {
         promise.state = STATES.FULFILLED;
         promise.value = value;
-        promise.onFulfilledHandlers.forEach(function (onFulfilled) {
+        onFulfilledHandlers.forEach(function (onFulfilled) {
           setTimeout(function () {
             onFulfilled(promise.value);
           }, 0);
@@ -55,14 +53,14 @@ module.exports = {
     var reject = function (reason) {
       if (promise.state === STATES.PENDING) {
         promise.state = STATES.REJECTED;
-        promise.reason = reason;
-        promise.onRejectedHandlers.forEach(function (onRejected) {
+        promise.value = reason;
+        onRejectedHandlers.forEach(function (onRejected) {
           setTimeout(function () {
-            onRejected(promise.reason);
+            onRejected(promise.value);
           })
         });
       }
     };
-    return { promise: promise, reject: reject, resolve: resolve };
+    return { promise, reject, resolve };
   }
 };
