@@ -22,7 +22,7 @@ module.exports = {
           }
           if (promise.state === STATES.FULFILLED) {
             setTimeout(function () {
-              promise.value = onFulfilled(promise.value);
+              onFulfilled(promise.value);
             }, 0);
           }
         }
@@ -32,7 +32,7 @@ module.exports = {
           }
           if (promise.state === STATES.REJECTED) {
             setTimeout(function () {
-              promise.value = onRejected(promise.value);
+              onRejected(promise.value);
             }, 0);
           }
         }
@@ -61,6 +61,6 @@ module.exports = {
         });
       }
     };
-    return { promise, reject, resolve };
+    return { promise: promise, reject: reject, resolve: resolve };
   }
 };
