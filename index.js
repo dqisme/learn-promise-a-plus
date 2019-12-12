@@ -10,29 +10,30 @@ var STATES = {
 
 module.exports = {
   deferred: function () {
-    var onFulfilledHandlers = [];
-    var onRejectedHandlers = [];
+    var _state = STATES.PENDING;
+    var _value = undefined;
+    var _reason = undefined;
+    var _onFulfilledHandlers = [];
+    var _onRejectedHandlers = [];
     var promise = {
-      state: STATES.PENDING,
-      value: undefined,
       then: function (onFulfilled, onRejected) {
         if (isFunction(onFulfilled)) {
-          if (promise.state === STATES.PENDING) {
-            onFulfilledHandlers.push(onFulfilled);
+          if (_state === STATES.PENDING) {
+            _onFulfilledHandlers.push(onFulfilled);
           }
-          if (promise.state === STATES.FULFILLED) {
+          if (_state === STATES.FULFILLED) {
             setTimeout(function () {
-              onFulfilled(promise.value);
+              onFulfilled(_value);
             }, 0);
           }
         }
         if (isFunction(onRejected)) {
-          if (promise.state === STATES.PENDING) {
-            onRejectedHandlers.push(onRejected);
+          if (_state === STATES.PENDING) {
+            _onRejectedHandlers.push(onRejected);
           }
-          if (promise.state === STATES.REJECTED) {
+          if (_state === STATES.REJECTED) {
             setTimeout(function () {
-              onRejected(promise.value);
+              onRejected(_reason);
             }, 0);
           }
         }
@@ -40,24 +41,24 @@ module.exports = {
       }
     };
     var resolve = function (value) {
-      if (promise.state === STATES.PENDING) {
-        promise.state = STATES.FULFILLED;
-        promise.value = value;
-        onFulfilledHandlers.forEach(function (onFulfilled) {
+      if (_state === STATES.PENDING) {
+        _state = STATES.FULFILLED;
+        _value = value;
+        _onFulfilledHandlers.forEach(function (onFulfilled) {
           setTimeout(function () {
-            onFulfilled(promise.value);
+            onFulfilled(_value);
           }, 0);
         });
       }
     };
     var reject = function (reason) {
-      if (promise.state === STATES.PENDING) {
-        promise.state = STATES.REJECTED;
-        promise.value = reason;
-        onRejectedHandlers.forEach(function (onRejected) {
+      if (_state === STATES.PENDING) {
+        _state = STATES.REJECTED;
+        _reason = reason;
+        _onRejectedHandlers.forEach(function (onRejected) {
           setTimeout(function () {
-            onRejected(promise.value);
-          })
+            onRejected(_reason);
+          }, 0)
         });
       }
     };
