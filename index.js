@@ -2,6 +2,10 @@ function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
+function isThenable(object) {
+  return isFunction(object.then);
+}
+
 var STATES = {
   PENDING: 'pending',
   FULFILLED: 'fulfilled',
@@ -23,7 +27,12 @@ module.exports = {
           }
           if (_state === STATES.FULFILLED) {
             setTimeout(function () {
-              try { onFulfilled(_value); } catch (e) {  }
+              try {
+                var result = onFulfilled(_value);
+                if (isThenable(result)) {} else {
+                  resolve(result);
+                }
+              } catch (e) {  }
             }, 0);
           }
         }
@@ -41,14 +50,17 @@ module.exports = {
       }
     };
     var resolve = function (value) {
+      _state = STATES.FULFILLED;
+      _value = value;
+      _onFulfilledHandlers.forEach(function (onFulfilled) {
+        setTimeout(function () {
+          try { onFulfilled(_value); } catch (e) { }
+        }, 0);
+      });
+    };
+    var fulfill = function (value) {
       if (_state === STATES.PENDING) {
-        _state = STATES.FULFILLED;
-        _value = value;
-        _onFulfilledHandlers.forEach(function (onFulfilled) {
-          setTimeout(function () {
-            try { onFulfilled(_value); } catch (e) { }
-          }, 0);
-        });
+        resolve(value);
       }
     };
     var reject = function (reason) {
@@ -62,6 +74,6 @@ module.exports = {
         });
       }
     };
-    return { promise: promise, reject: reject, resolve: resolve };
+    return { promise: promise, reject: reject, resolve: fulfill };
   }
 };
