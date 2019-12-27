@@ -36,7 +36,14 @@ function deferred() {
           if (isFunction(onFulfilled)) {
             try {
               var result = onFulfilled(_value);
-              _deferred.resolve(result);
+              if (result === _deferred.promise) {
+                throw new TypeError();
+              }
+              if (isThenable(result)) {
+                result.then(_deferred.resolve, _deferred.reject);
+              } else {
+                _deferred.resolve(result);
+              }
             } catch (error) {
               _deferred.reject(error);
             }
@@ -50,7 +57,14 @@ function deferred() {
           if (isFunction(onRejected)) {
             try {
               var result = onRejected(_reason);
-              _deferred.resolve(result);
+              if (result === _deferred.promise) {
+                throw new TypeError();
+              }
+              if (isThenable(result)) {
+                result.then(_deferred.resolve, _deferred.reject);
+              } else {
+                _deferred.resolve(result);
+              }
             } catch (error) {
               _deferred.reject(error);
             }
@@ -74,7 +88,14 @@ function deferred() {
           if (isFunction(onFulfilled)) {
             try {
               var result = onFulfilled(_value);
-              _deferred.resolve(result);
+              if (result === _deferred.promise) {
+                throw new TypeError();
+              }
+              if (isThenable(result)) {
+                result.then(_deferred.resolve, _deferred.reject);
+              } else {
+                _deferred.resolve(result);
+              }
             } catch (error) {
               _deferred.reject(error);
             }
@@ -97,7 +118,14 @@ function deferred() {
           if (isFunction(onRejected)) {
             try {
               var result = onRejected(_reason);
-              _deferred.resolve(result);
+              if (result === _deferred.promise) {
+                throw new TypeError();
+              }
+              if (isThenable(result)) {
+                result.then(_deferred.resolve, _deferred.reject);
+              } else {
+                _deferred.resolve(result);
+              }
             } catch (error) {
               _deferred.reject(error);
             }
