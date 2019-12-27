@@ -3,7 +3,11 @@ function isFunction(functionToCheck) {
 }
 
 function isThenable(object) {
-  return isFunction(object.then);
+  return object && isFunction(object.then);
+}
+
+function callAsync(functionToCall) {
+  setTimeout(functionToCall, 0);
 }
 
 var STATES = {
@@ -13,65 +17,79 @@ var STATES = {
 };
 
 function deferred() {
-    var _state = STATES.PENDING;
-    var _value = undefined;
-    var _reason = undefined;
-    var _onFulfilledHandlers = [];
-    var _onRejectedHandlers = [];
-    var promise = {
-      then: function (onFulfilled, onRejected) {
-        if (isFunction(onFulfilled)) {
-          if (_state === STATES.PENDING) {
-            _onFulfilledHandlers.push(onFulfilled);
+  var _state = STATES.PENDING;
+  var _value = undefined;
+  var _reason = undefined;
+  var _queue = [];
+  var promise = {
+    then: function (onFulfilled, onRejected) {
+      var _deferred = deferred();
+      if (_state === STATES.PENDING) {
+        _queue.push({ onFulfilled: onFulfilled, onRejected: onRejected });
+      }
+      if (_state === STATES.FULFILLED) {
+        callAsync(function() {
+          if (isFunction(onFulfilled)) {
+            try {
+              onFulfilled(_value);
+            } catch (error) {
+            }
+          } else {
+            _deferred.resolve();
           }
-          if (_state === STATES.FULFILLED) {
-            setTimeout(function () {
-              try {
-                var result = onFulfilled(_value);
-                if (isThenable(result)) {} else {
-                  resolve(result);
-                }
-              } catch (e) {  }
-            }, 0);
-          }
-        }
-        if (isFunction(onRejected)) {
-          if (_state === STATES.PENDING) {
-            _onRejectedHandlers.push(onRejected);
-          }
-          if (_state === STATES.REJECTED) {
-            setTimeout(function () {
+        });
+      }
+      if (_state === STATES.REJECTED) {
+        callAsync(function() {
+          if (isFunction(onRejected)) {
+            try {
               onRejected(_reason);
-            }, 0);
+            } catch (error) {
+            }
+          } else {
+            _deferred.reject(_reason);
+          }
+        });
+      }
+      return _deferred.promise;
+    }
+  };
+  var resolve = function (value) {
+    if (_state === STATES.PENDING) {
+      _state = STATES.FULFILLED;
+      _value = value;
+      callAsync(function() {
+        while(_queue.length > 0) {
+          var onFulfilled = _queue.shift().onFulfilled;
+          if (isFunction(onFulfilled)) {
+            try {
+              onFulfilled(_value);
+            } catch (error) {
+            }
           }
         }
-        return promise;
-      }
-    };
-    var resolve = function (value) {
-      if (_state === STATES.PENDING) {
-        _state = STATES.FULFILLED;
-        _value = value;
-        _onFulfilledHandlers.forEach(function (onFulfilled) {
-          setTimeout(function () {
-            try { onFulfilled(_value); } catch (e) { }
-          }, 0);
-        });
-      }
-    };
-    var reject = function (reason) {
-      if (_state === STATES.PENDING) {
-        _state = STATES.REJECTED;
-        _reason = reason;
-        _onRejectedHandlers.forEach(function (onRejected) {
-          setTimeout(function () {
-            onRejected(_reason);
-          }, 0)
-        });
-      }
-    };
-    return { promise: promise, reject: reject, resolve: resolve };
-  }
+      });
+    }
+  };
+  var reject = function (reason) {
+    if (_state === STATES.PENDING) {
+      _state = STATES.REJECTED;
+      _reason = reason;
+      callAsync(function() {
+        while(_queue.length > 0) {
+          var onRejected = _queue.shift().onRejected;
+          if (isFunction(onRejected)) {
+            try {
+              onRejected(_reason);
+            } catch (error) {
+            }
+          }
+        }
+      });
+    }
+  };
+  return { promise: promise, reject: reject, resolve: resolve };
+}
 
 
 module.exports = {
