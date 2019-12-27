@@ -12,8 +12,7 @@ var STATES = {
   REJECTED: 'rejected'
 };
 
-module.exports = {
-  deferred: function () {
+function deferred() {
     var _state = STATES.PENDING;
     var _value = undefined;
     var _reason = undefined;
@@ -50,17 +49,14 @@ module.exports = {
       }
     };
     var resolve = function (value) {
-      _state = STATES.FULFILLED;
-      _value = value;
-      _onFulfilledHandlers.forEach(function (onFulfilled) {
-        setTimeout(function () {
-          try { onFulfilled(_value); } catch (e) { }
-        }, 0);
-      });
-    };
-    var fulfill = function (value) {
       if (_state === STATES.PENDING) {
-        resolve(value);
+        _state = STATES.FULFILLED;
+        _value = value;
+        _onFulfilledHandlers.forEach(function (onFulfilled) {
+          setTimeout(function () {
+            try { onFulfilled(_value); } catch (e) { }
+          }, 0);
+        });
       }
     };
     var reject = function (reason) {
@@ -74,6 +70,10 @@ module.exports = {
         });
       }
     };
-    return { promise: promise, reject: reject, resolve: fulfill };
+    return { promise: promise, reject: reject, resolve: resolve };
   }
+
+
+module.exports = {
+  deferred: deferred
 };
