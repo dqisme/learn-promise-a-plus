@@ -78,6 +78,8 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
+          } else {
+            _deferred.resolve(_value);
           }
         }
       });
@@ -99,7 +101,10 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
+          } else {
+            _deferred.reject(_reason);
           }
+
         }
       });
     }
