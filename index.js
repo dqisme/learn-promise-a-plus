@@ -41,7 +41,7 @@ function deferred() {
               _deferred.reject(error);
             }
           } else {
-            _deferred.resolve();
+            _deferred.resolve(_value);
           }
         });
       }
