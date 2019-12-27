@@ -25,14 +25,20 @@ function deferred() {
     then: function (onFulfilled, onRejected) {
       var _deferred = deferred();
       if (_state === STATES.PENDING) {
-        _queue.push({ onFulfilled: onFulfilled, onRejected: onRejected });
+        _queue.push({
+          deferred: _deferred,
+          onFulfilled: onFulfilled,
+          onRejected: onRejected,
+        });
       }
       if (_state === STATES.FULFILLED) {
         callAsync(function() {
           if (isFunction(onFulfilled)) {
             try {
-              onFulfilled(_value);
+              var result = onFulfilled(_value);
+              _deferred.resolve(result);
             } catch (error) {
+              _deferred.reject(error);
             }
           } else {
             _deferred.resolve();
@@ -43,8 +49,10 @@ function deferred() {
         callAsync(function() {
           if (isFunction(onRejected)) {
             try {
-              onRejected(_reason);
+              var result = onRejected(_reason);
+              _deferred.resolve(result);
             } catch (error) {
+              _deferred.reject(error);
             }
           } else {
             _deferred.reject(_reason);
@@ -60,11 +68,15 @@ function deferred() {
       _value = value;
       callAsync(function() {
         while(_queue.length > 0) {
-          var onFulfilled = _queue.shift().onFulfilled;
+          var current = _queue.shift();
+          var onFulfilled = current.onFulfilled;
+          var _deferred = current.deferred;
           if (isFunction(onFulfilled)) {
             try {
-              onFulfilled(_value);
+              var result = onFulfilled(_value);
+              _deferred.resolve(result);
             } catch (error) {
+              _deferred.reject(error);
             }
           }
         }
@@ -77,11 +89,15 @@ function deferred() {
       _reason = reason;
       callAsync(function() {
         while(_queue.length > 0) {
-          var onRejected = _queue.shift().onRejected;
+          var current = _queue.shift();
+          var onRejected = current.onRejected;
+          var _deferred = current.deferred;
           if (isFunction(onRejected)) {
             try {
-              onRejected(_reason);
+              var result = onRejected(_reason);
+              _deferred.resolve(result);
             } catch (error) {
+              _deferred.reject(error);
             }
           }
         }
