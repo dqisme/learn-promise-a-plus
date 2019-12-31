@@ -41,7 +41,7 @@ function deferred() {
               }
               var resultThen = getThen(result);
               if (isFunction(resultThen)) {
-                resultThen(_deferred.resolve, _deferred.reject);
+                resultThen.call(result, _deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -63,7 +63,7 @@ function deferred() {
               }
               var resultThen = getThen(result);
               if (isFunction(resultThen)) {
-                resultThen(_deferred.resolve, _deferred.reject);
+                resultThen.call(result, _deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -95,7 +95,7 @@ function deferred() {
               }
               var resultThen = getThen(result);
               if (isFunction(resultThen)) {
-                resultThen(_deferred.resolve, _deferred.reject);
+                resultThen.call(result, _deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -126,7 +126,7 @@ function deferred() {
               }
               var resultThen = getThen(result);
               if (isFunction(resultThen)) {
-                resultThen(_deferred.resolve, _deferred.reject);
+                resultThen.call(result, _deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
