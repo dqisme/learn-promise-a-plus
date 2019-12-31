@@ -2,8 +2,8 @@ function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
-function isThenable(object) {
-  return object && isFunction(object.then);
+function getThen(thenableLike) {
+  return thenableLike ? thenableLike.then : null;
 }
 
 function callAsync(functionToCall) {
@@ -39,8 +39,9 @@ function deferred() {
               if (result === _deferred.promise) {
                 throw new TypeError();
               }
-              if (isThenable(result)) {
-                result.then(_deferred.resolve, _deferred.reject);
+              var resultThen = getThen(result);
+              if (isFunction(resultThen)) {
+                resultThen(_deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -60,8 +61,9 @@ function deferred() {
               if (result === _deferred.promise) {
                 throw new TypeError();
               }
-              if (isThenable(result)) {
-                result.then(_deferred.resolve, _deferred.reject);
+              var resultThen = getThen(result);
+              if (isFunction(resultThen)) {
+                resultThen(_deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -91,8 +93,9 @@ function deferred() {
               if (result === _deferred.promise) {
                 throw new TypeError();
               }
-              if (isThenable(result)) {
-                result.then(_deferred.resolve, _deferred.reject);
+              var resultThen = getThen(result);
+              if (isFunction(resultThen)) {
+                resultThen(_deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
@@ -121,8 +124,9 @@ function deferred() {
               if (result === _deferred.promise) {
                 throw new TypeError();
               }
-              if (isThenable(result)) {
-                result.then(_deferred.resolve, _deferred.reject);
+              var resultThen = getThen(result);
+              if (isFunction(resultThen)) {
+                resultThen(_deferred.resolve, _deferred.reject);
               } else {
                 _deferred.resolve(result);
               }
