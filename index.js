@@ -10,6 +10,25 @@ function callAsync(functionToCall) {
   setTimeout(functionToCall, 0);
 }
 
+function resolutionProcedure(fulfillOrReject, valueOrReason, deferredObject) {
+    try {
+        var result = fulfillOrReject(valueOrReason);
+        if (result === deferredObject.promise) {
+            throw new TypeError();
+        }
+        var resultThen = getThen(result);
+        if (isFunction(resultThen)) {
+            resultThen.call(result, deferredObject.resolve, deferredObject.reject);
+        }
+        else {
+            deferredObject.resolve(result);
+        }
+    }
+    catch (error) {
+        deferredObject.reject(error);
+    }
+}
+
 var STATES = {
   PENDING: 'pending',
   FULFILLED: 'fulfilled',
@@ -34,20 +53,7 @@ function deferred() {
       if (_state === STATES.FULFILLED) {
         callAsync(function() {
           if (isFunction(onFulfilled)) {
-            try {
-              var result = onFulfilled(_value);
-              if (result === _deferred.promise) {
-                throw new TypeError();
-              }
-              var resultThen = getThen(result);
-              if (isFunction(resultThen)) {
-                resultThen.call(result, _deferred.resolve, _deferred.reject);
-              } else {
-                _deferred.resolve(result);
-              }
-            } catch (error) {
-              _deferred.reject(error);
-            }
+            resolutionProcedure(onFulfilled, _value, _deferred);
           } else if (_state === STATES.FULFILLED) {
             _deferred.resolve(_value);
           }
@@ -56,20 +62,7 @@ function deferred() {
       if (_state === STATES.REJECTED) {
         callAsync(function() {
           if (isFunction(onRejected)) {
-            try {
-              var result = onRejected(_reason);
-              if (result === _deferred.promise) {
-                throw new TypeError();
-              }
-              var resultThen = getThen(result);
-              if (isFunction(resultThen)) {
-                resultThen.call(result, _deferred.resolve, _deferred.reject);
-              } else {
-                _deferred.resolve(result);
-              }
-            } catch (error) {
-              _deferred.reject(error);
-            }
+            resolutionProcedure(onRejected, _reason, _deferred);
           } else if (_state === STATES.REJECTED) {
             _deferred.reject(_reason);
           }
@@ -88,20 +81,7 @@ function deferred() {
           var onFulfilled = current.onFulfilled;
           var _deferred = current.deferred;
           if (isFunction(onFulfilled)) {
-            try {
-              var result = onFulfilled(_value);
-              if (result === _deferred.promise) {
-                throw new TypeError();
-              }
-              var resultThen = getThen(result);
-              if (isFunction(resultThen)) {
-                resultThen.call(result, _deferred.resolve, _deferred.reject);
-              } else {
-                _deferred.resolve(result);
-              }
-            } catch (error) {
-              _deferred.reject(error);
-            }
+            resolutionProcedure(onFulfilled, _value, _deferred);
           } else if (_state === STATES.FULFILLED) {
             _deferred.resolve(_value);
           }
@@ -119,20 +99,7 @@ function deferred() {
           var onRejected = current.onRejected;
           var _deferred = current.deferred;
           if (isFunction(onRejected)) {
-            try {
-              var result = onRejected(_reason);
-              if (result === _deferred.promise) {
-                throw new TypeError();
-              }
-              var resultThen = getThen(result);
-              if (isFunction(resultThen)) {
-                resultThen.call(result, _deferred.resolve, _deferred.reject);
-              } else {
-                _deferred.resolve(result);
-              }
-            } catch (error) {
-              _deferred.reject(error);
-            }
+            resolutionProcedure(onRejected, _reason, _deferred);
           } else if (_state === STATES.REJECTED) {
             _deferred.reject(_reason);
           }
