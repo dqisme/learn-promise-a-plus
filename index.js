@@ -48,7 +48,7 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
-          } else {
+          } else if (_state === STATES.FULFILLED) {
             _deferred.resolve(_value);
           }
         });
@@ -70,7 +70,7 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
-          } else {
+          } else if (_state === STATES.REJECTED) {
             _deferred.reject(_reason);
           }
         });
@@ -102,7 +102,7 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
-          } else {
+          } else if (_state === STATES.FULFILLED) {
             _deferred.resolve(_value);
           }
         }
@@ -133,7 +133,7 @@ function deferred() {
             } catch (error) {
               _deferred.reject(error);
             }
-          } else {
+          } else if (_state === STATES.REJECTED) {
             _deferred.reject(_reason);
           }
 
