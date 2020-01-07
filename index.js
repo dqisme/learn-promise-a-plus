@@ -2,6 +2,10 @@ function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
+function isPromise(promiseLike) {
+  return false;
+}
+
 function getThen(thenableLike) {
   return thenableLike ? thenableLike.then : null;
 }
@@ -11,22 +15,32 @@ function callAsync(functionToCall) {
 }
 
 function resolutionProcedure(fulfillOrReject, valueOrReason, deferredObject) {
-    try {
-        var result = fulfillOrReject(valueOrReason);
-        if (result === deferredObject.promise) {
-            throw new TypeError();
-        }
-        var resultThen = getThen(result);
-        if (isFunction(resultThen)) {
-            resultThen.call(result, deferredObject.resolve, deferredObject.reject);
-        }
-        else {
-            deferredObject.resolve(result);
-        }
+  try {
+    var result = fulfillOrReject(valueOrReason);
+    if (result === deferredObject.promise) {
+      throw new TypeError();
     }
-    catch (error) {
-        deferredObject.reject(error);
+    if (isPromise(result)) {
+      result.then(deferredObject.resolve, deferredObject.reject);
+    } else {
+      var resultThen = getThen(result);
+      if (isFunction(resultThen)) {
+        resultThen.call(result,
+          function (value) {
+            resolutionProcedure(fulfillOrReject, value, deferredObject);
+          },
+          function (reason) {
+            deferredObject.reject(reason);
+          });
+      }
+      else {
+        deferredObject.resolve(result);
+      }
     }
+  }
+  catch (error) {
+    deferredObject.reject(error);
+  }
 }
 
 var STATES = {
@@ -36,35 +50,37 @@ var STATES = {
 };
 
 function deferred() {
-  var _state = STATES.PENDING;
-  var _value = undefined;
-  var _reason = undefined;
-  var _queue = [];
+  var props = {
+      state: STATES.PENDING,
+      value: undefined,
+      reason: undefined,
+  };
+  var queue = [];
   var promise = {
     then: function (onFulfilled, onRejected) {
       var _deferred = deferred();
-      if (_state === STATES.PENDING) {
-        _queue.push({
+      if (props.state === STATES.PENDING) {
+        queue.push({
           deferred: _deferred,
           onFulfilled: onFulfilled,
           onRejected: onRejected,
         });
       }
-      if (_state === STATES.FULFILLED) {
+      if (props.state === STATES.FULFILLED) {
         callAsync(function() {
           if (isFunction(onFulfilled)) {
-            resolutionProcedure(onFulfilled, _value, _deferred);
-          } else if (_state === STATES.FULFILLED) {
-            _deferred.resolve(_value);
+            resolutionProcedure(onFulfilled, props.value, _deferred);
+          } else if (props.state === STATES.FULFILLED) {
+            _deferred.resolve(props.value);
           }
         });
       }
-      if (_state === STATES.REJECTED) {
+      if (props.state === STATES.REJECTED) {
         callAsync(function() {
           if (isFunction(onRejected)) {
-            resolutionProcedure(onRejected, _reason, _deferred);
-          } else if (_state === STATES.REJECTED) {
-            _deferred.reject(_reason);
+            resolutionProcedure(onRejected, props.reason, _deferred);
+          } else if (props.state === STATES.REJECTED) {
+            _deferred.reject(props.reason);
           }
         });
       }
@@ -72,36 +88,36 @@ function deferred() {
     }
   };
   var resolve = function (value) {
-    if (_state === STATES.PENDING) {
-      _state = STATES.FULFILLED;
-      _value = value;
+    if (props.state === STATES.PENDING) {
+      props.state = STATES.FULFILLED;
+      props.value = value;
       callAsync(function() {
-        while(_queue.length > 0) {
-          var current = _queue.shift();
+        while(queue.length > 0) {
+          var current = queue.shift();
           var onFulfilled = current.onFulfilled;
           var _deferred = current.deferred;
           if (isFunction(onFulfilled)) {
-            resolutionProcedure(onFulfilled, _value, _deferred);
-          } else if (_state === STATES.FULFILLED) {
-            _deferred.resolve(_value);
+            resolutionProcedure(onFulfilled, props.value, _deferred);
+          } else if (props.state === STATES.FULFILLED) {
+            _deferred.resolve(props.value);
           }
         }
       });
     }
   };
   var reject = function (reason) {
-    if (_state === STATES.PENDING) {
-      _state = STATES.REJECTED;
-      _reason = reason;
+    if (props.state === STATES.PENDING) {
+      props.state = STATES.REJECTED;
+      props.reason = reason;
       callAsync(function() {
-        while(_queue.length > 0) {
-          var current = _queue.shift();
+        while(queue.length > 0) {
+          var current = queue.shift();
           var onRejected = current.onRejected;
           var _deferred = current.deferred;
           if (isFunction(onRejected)) {
-            resolutionProcedure(onRejected, _reason, _deferred);
-          } else if (_state === STATES.REJECTED) {
-            _deferred.reject(_reason);
+            resolutionProcedure(onRejected, props.reason, _deferred);
+          } else if (props.state === STATES.REJECTED) {
+            _deferred.reject(props.reason);
           }
 
         }
