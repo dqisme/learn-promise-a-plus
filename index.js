@@ -1,9 +1,41 @@
+function PromiseObject(props, queue) {
+  this.then = function (onFulfilled, onRejected) {
+    var _deferred = deferred();
+    if (props.state === STATES.PENDING) {
+      queue.push({
+        deferred: _deferred,
+        onFulfilled: onFulfilled,
+        onRejected: onRejected,
+      });
+    }
+    if (props.state === STATES.FULFILLED) {
+      callAsync(function () {
+        if (isFunction(onFulfilled)) {
+          resolutionProcedure(onFulfilled, props.value, _deferred);
+        } else if (props.state === STATES.FULFILLED) {
+          _deferred.resolve(props.value);
+        }
+      });
+    }
+    if (props.state === STATES.REJECTED) {
+      callAsync(function () {
+        if (isFunction(onRejected)) {
+          resolutionProcedure(onRejected, props.reason, _deferred);
+        } else if (props.state === STATES.REJECTED) {
+          _deferred.reject(props.reason);
+        }
+      });
+    }
+    return _deferred.promise;
+  }
+}
+
 function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
 function isPromise(promiseLike) {
-  return false;
+  return promiseLike instanceof PromiseObject;
 }
 
 function getThen(thenableLike) {
@@ -56,37 +88,7 @@ function deferred() {
       reason: undefined,
   };
   var queue = [];
-  var promise = {
-    then: function (onFulfilled, onRejected) {
-      var _deferred = deferred();
-      if (props.state === STATES.PENDING) {
-        queue.push({
-          deferred: _deferred,
-          onFulfilled: onFulfilled,
-          onRejected: onRejected,
-        });
-      }
-      if (props.state === STATES.FULFILLED) {
-        callAsync(function() {
-          if (isFunction(onFulfilled)) {
-            resolutionProcedure(onFulfilled, props.value, _deferred);
-          } else if (props.state === STATES.FULFILLED) {
-            _deferred.resolve(props.value);
-          }
-        });
-      }
-      if (props.state === STATES.REJECTED) {
-        callAsync(function() {
-          if (isFunction(onRejected)) {
-            resolutionProcedure(onRejected, props.reason, _deferred);
-          } else if (props.state === STATES.REJECTED) {
-            _deferred.reject(props.reason);
-          }
-        });
-      }
-      return _deferred.promise;
-    }
-  };
+  var promise = new PromiseObject(props, queue);
   var resolve = function (value) {
     if (props.state === STATES.PENDING) {
       props.state = STATES.FULFILLED;
