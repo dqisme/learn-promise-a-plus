@@ -11,7 +11,12 @@ function PromiseObject(props, queue) {
     if (props.state === STATES.FULFILLED) {
       callAsync(function () {
         if (isFunction(onFulfilled)) {
-          resolutionProcedure(onFulfilled, props.value, _deferred);
+          try {
+            var result = onFulfilled(props.value);
+            resolutionProcedure(result, _deferred);
+          } catch (error) {
+            _deferred.reject(error);
+          }
         } else if (props.state === STATES.FULFILLED) {
           _deferred.resolve(props.value);
         }
@@ -20,7 +25,12 @@ function PromiseObject(props, queue) {
     if (props.state === STATES.REJECTED) {
       callAsync(function () {
         if (isFunction(onRejected)) {
-          resolutionProcedure(onRejected, props.reason, _deferred);
+          try {
+            var result = onRejected(props.reason);
+            resolutionProcedure(result, _deferred);
+          } catch (error) {
+            _deferred.reject(error);
+          }
         } else if (props.state === STATES.REJECTED) {
           _deferred.reject(props.reason);
         }
@@ -46,9 +56,7 @@ function callAsync(functionToCall) {
   setTimeout(functionToCall, 0);
 }
 
-function resolutionProcedure(fulfillOrReject, valueOrReason, deferredObject) {
-  try {
-    var result = fulfillOrReject(valueOrReason);
+function resolutionProcedure(result, deferredObject) {
     if (result === deferredObject.promise) {
       throw new TypeError();
     }
@@ -59,7 +67,7 @@ function resolutionProcedure(fulfillOrReject, valueOrReason, deferredObject) {
       if (isFunction(resultThen)) {
         resultThen.call(result,
           function (value) {
-            resolutionProcedure(fulfillOrReject, value, deferredObject);
+            resolutionProcedure(value, deferredObject);
           },
           function (reason) {
             deferredObject.reject(reason);
@@ -69,10 +77,6 @@ function resolutionProcedure(fulfillOrReject, valueOrReason, deferredObject) {
         deferredObject.resolve(result);
       }
     }
-  }
-  catch (error) {
-    deferredObject.reject(error);
-  }
 }
 
 var STATES = {
@@ -99,7 +103,12 @@ function deferred() {
           var onFulfilled = current.onFulfilled;
           var _deferred = current.deferred;
           if (isFunction(onFulfilled)) {
-            resolutionProcedure(onFulfilled, props.value, _deferred);
+            try {
+              var result = onFulfilled(props.value);
+              resolutionProcedure(result, _deferred);
+            } catch (error) {
+              _deferred.reject(error);
+            }
           } else if (props.state === STATES.FULFILLED) {
             _deferred.resolve(props.value);
           }
@@ -117,7 +126,12 @@ function deferred() {
           var onRejected = current.onRejected;
           var _deferred = current.deferred;
           if (isFunction(onRejected)) {
-            resolutionProcedure(onRejected, props.reason, _deferred);
+            try {
+              var result = onRejected(props.reason);
+              resolutionProcedure(result, _deferred);
+            } catch (error) {
+              _deferred.reject(error);
+            }
           } else if (props.state === STATES.REJECTED) {
             _deferred.reject(props.reason);
           }
