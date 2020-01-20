@@ -13,7 +13,7 @@ function PromiseObject(props, queue) {
         if (isFunction(onFulfilled)) {
           try {
             var result = onFulfilled(props.value);
-            resolutionProcedure(result, _deferred);
+            resolutionProcedure(_deferred, result);
           } catch (error) {
             _deferred.reject(error);
           }
@@ -27,7 +27,7 @@ function PromiseObject(props, queue) {
         if (isFunction(onRejected)) {
           try {
             var result = onRejected(props.reason);
-            resolutionProcedure(result, _deferred);
+            resolutionProcedure(_deferred, result);
           } catch (error) {
             _deferred.reject(error);
           }
@@ -56,25 +56,25 @@ function callAsync(functionToCall) {
   setTimeout(functionToCall, 0);
 }
 
-function resolutionProcedure(result, deferredObject) {
-    if (result === deferredObject.promise) {
+function resolutionProcedure(deferredObject, x) {
+    if (x === deferredObject.promise) {
       throw new TypeError();
     }
-    if (isPromise(result)) {
-      result.then(deferredObject.resolve, deferredObject.reject);
+    if (isPromise(x)) {
+      x.then(deferredObject.resolve, deferredObject.reject);
     } else {
-      var resultThen = getThen(result);
+      var resultThen = getThen(x);
       if (isFunction(resultThen)) {
-        resultThen.call(result,
-          function (value) {
-            resolutionProcedure(value, deferredObject);
+        resultThen.call(x,
+          function (y) {
+            resolutionProcedure(deferredObject, y);
           },
           function (reason) {
             deferredObject.reject(reason);
           });
       }
       else {
-        deferredObject.resolve(result);
+        deferredObject.resolve(x);
       }
     }
 }
@@ -105,7 +105,7 @@ function deferred() {
           if (isFunction(onFulfilled)) {
             try {
               var result = onFulfilled(props.value);
-              resolutionProcedure(result, _deferred);
+              resolutionProcedure(_deferred, result);
             } catch (error) {
               _deferred.reject(error);
             }
@@ -128,7 +128,7 @@ function deferred() {
           if (isFunction(onRejected)) {
             try {
               var result = onRejected(props.reason);
-              resolutionProcedure(result, _deferred);
+              resolutionProcedure(_deferred, result);
             } catch (error) {
               _deferred.reject(error);
             }
